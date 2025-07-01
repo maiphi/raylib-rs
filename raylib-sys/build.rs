@@ -377,7 +377,8 @@ fn platform_from_target(target: &str) -> (Platform, PlatformOS) {
     let platform = if target.contains("wasm") {
         Platform::Web
     } else if target.contains("armv7-unknown-linux") {
-        Platform::RPI
+        // Platform::RPI
+        Platform::Desktop
     } else {
         Platform::Desktop
     };
