@@ -272,7 +272,7 @@ impl RaylibHandle {
     }
 
     /// Set internal gamepad mappings (SDL_GameControllerDB)
-    pub fn set_gamepad_mappings(&self, bind: &[i8]) -> i32 {
+    pub fn set_gamepad_mappings(&self, bind: &[::std::os::raw::c_char]) -> i32 {
         unsafe { ffi::SetGamepadMappings(bind.as_ptr()) }
     }
 
