@@ -62,7 +62,7 @@ fn build_with_cmake(src_path: &str) {
 
     let mut conf = cmake::Config::new(src_path);
     let mut builder;
-    let mut profile = "";
+    let profile;
     #[cfg(debug_assertions)]
     {
         builder = conf.profile("Debug");
@@ -151,7 +151,7 @@ fn build_with_cmake(src_path: &str) {
         Platform::Web => conf
             .define("PLATFORM", "Web")
             .define("CMAKE_C_FLAGS", "-s ASYNCIFY"),
-        Platform::RPI => conf.define("PLATFORM", "Raspberry Pi"),
+        Platform::DRM => conf.define("PLATFORM", "DRM"),
     };
 
     let dst = conf.build();
@@ -192,7 +192,7 @@ fn gen_bindings() {
 
     let plat = match platform {
         Platform::Desktop => "-DPLATFORM_DESKTOP",
-        Platform::RPI => "-DPLATFORM_RPI",
+        Platform::DRM => "-DPLATFORM_DRM",
         Platform::Web => "-DPLATFORM_WEB",
     };
 
@@ -300,12 +300,6 @@ fn link(platform: Platform, platform_os: PlatformOS) {
     }
     if platform == Platform::Web {
         println!("cargo:rustc-link-lib=glfw");
-    } else if platform == Platform::RPI {
-        println!("cargo:rustc-link-search=/opt/vc/lib");
-        println!("cargo:rustc-link-lib=bcm_host");
-        println!("cargo:rustc-link-lib=brcmEGL");
-        println!("cargo:rustc-link-lib=brcmGLESv2");
-        println!("cargo:rustc-link-lib=vcos");
     }
 
     println!("cargo:rustc-link-lib=static=raylib");
@@ -373,12 +367,13 @@ fn run_command(cmd: &str, args: &[&str]) {
     }
 }
 
+#[cfg_attr(feature = "drm", allow(unused_variables))]
 fn platform_from_target(target: &str) -> (Platform, PlatformOS) {
+    #[cfg(feature = "drm")]
+    let platform = Platform::DRM;
+    #[cfg(not(feature = "drm"))]
     let platform = if target.contains("wasm") {
         Platform::Web
-    } else if target.contains("armv7-unknown-linux") {
-        // Platform::RPI
-        Platform::Desktop
     } else {
         Platform::Desktop
     };
@@ -407,12 +402,16 @@ fn platform_from_target(target: &str) -> (Platform, PlatformOS) {
                 _ => panic!("Unknown platform {}", uname()),
             }
         }
-    } else if platform == Platform::RPI {
+    } else if platform == Platform::DRM {
         let un: &str = &uname();
-        if un == "Linux" {
-            PlatformOS::Linux
-        } else {
-            PlatformOS::Unknown
+        match un {
+            "Linux" => PlatformOS::Linux,
+            "FreeBSD" => PlatformOS::BSD,
+            "OpenBSD" => PlatformOS::BSD,
+            "NetBSD" => PlatformOS::BSD,
+            "DragonFly" => PlatformOS::BSD,
+            "Darwin" => PlatformOS::OSX,
+            _ => panic!("Unknown platform {}", uname()),
         }
     } else {
         PlatformOS::Unknown
@@ -437,7 +436,7 @@ fn uname() -> String {
 enum Platform {
     Web,
     Desktop,
-    RPI, // raspberry pi
+    DRM,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]

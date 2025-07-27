@@ -20,7 +20,7 @@ bindgen = "0.69.0"
 [features]
 default = []
 # Build Raylib headless for docs. Up to you to link
-#nobuild = []
+nobuild = []
 
 # Build for wayland on linux. Should fix #119
 wayland = []
@@ -37,3 +37,6 @@ nogif = []
 
 # config.h's SUPPORT_CUSTOM_FRAME_CONTROL
 custom_frame_control = []
+
+# PLATFORM=DRM
+drm = []
