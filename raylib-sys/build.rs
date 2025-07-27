@@ -114,7 +114,11 @@ fn build_with_cmake(src_path: &str) {
         // builder.define("OPENGL_VERSION", "1.1");
 
         #[cfg(feature = "opengl_es_20")]
-        builder.define("OPENGL_VERSION", "ES 2.0");
+        {
+            builder.define("OPENGL_VERSION", "ES 2.0");
+            println!("cargo:rustc-link-lib=GLESv2");
+            println!("cargo:rustc-link-lib=GLdispatch");
+        }
 
         // Once again felt this was necessary incase a default was changed :)
         #[cfg(not(any(
@@ -300,6 +304,10 @@ fn link(platform: Platform, platform_os: PlatformOS) {
     }
     if platform == Platform::Web {
         println!("cargo:rustc-link-lib=glfw");
+    } else if platform == Platform::DRM {
+        println!("cargo:rustc-link-lib=EGL");
+        println!("cargo:rustc-link-lib=drm");
+        println!("cargo:rustc-link-lib=gbm");
     }
 
     println!("cargo:rustc-link-lib=static=raylib");
@@ -402,20 +410,10 @@ fn platform_from_target(target: &str) -> (Platform, PlatformOS) {
                 _ => panic!("Unknown platform {}", uname()),
             }
         }
-    } else if platform == Platform::DRM {
-        let un: &str = &uname();
-        match un {
-            "Linux" => PlatformOS::Linux,
-            "FreeBSD" => PlatformOS::BSD,
-            "OpenBSD" => PlatformOS::BSD,
-            "NetBSD" => PlatformOS::BSD,
-            "DragonFly" => PlatformOS::BSD,
-            "Darwin" => PlatformOS::OSX,
-            _ => panic!("Unknown platform {}", uname()),
-        }
     } else {
         PlatformOS::Unknown
     };
+    // Do not set PlatformOS for DRM to avoid linking X11/wayland
 
     (platform, platform_os)
 }
