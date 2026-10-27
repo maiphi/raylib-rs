@@ -1,7 +1,7 @@
 [submodule "raylib-sys/raylib"]
 	path = raylib-sys/raylib
-	url = https://github.com/raysan5/raylib
-	commit = "6.0"
+	url = https://github.com/maiphi/raylib
+	branch = 6.0-drm-input-hotplug
 	shallow = true
 [submodule "raylib-sys/raygui-examples"]
 	path = raylib-sys/raygui-examples
